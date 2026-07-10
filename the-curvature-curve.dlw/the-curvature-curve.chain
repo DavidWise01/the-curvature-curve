@@ -1,0 +1,9 @@
+ROOT0-DLW-CHAIN-v1
+index : 1189
+slug  : the-curvature-curve
+seal  : b080ac8fea32a3cddf8ddcbe24fd73cb93d3d1a6ac7fa83d7861c7d24104204a
+prev  : d7b3b26b6754eed09a240645fe593c108fddc2d788e8d20e5a2c2f5bca0aa559
+link  : aeb467e81d5500e760e9375bddaec47788da91f70446212ba40765f230a14b05
+head  : 324d76a71627b993d22bc11c1290d4d2fd4b411ba959c6e859c3f0a71c1f72dc
+
+— the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.

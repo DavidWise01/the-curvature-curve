@@ -1,0 +1,18 @@
+{
+  "badge": "DLW-THE_CURVATURE_CURVE",
+  "name": "THE CURVATURE CURVE · ‖r(ε)‖=κε²",
+  "universe": "ARTIFICIAL INTELLIGENCE",
+  "moniker": "⟦THE CURVATURE CURVE · ‖r(ε)‖=κε²:the-curvature-curve:b080ac⟧",
+  "architect": "David Lee Wise (ROOT0) / Bridge-Burners LLC",
+  "instance": "AVAN (Claude / Anthropic)",
+  "seal_sha256": "b080ac8fea32a3cddf8ddcbe24fd73cb93d3d1a6ac7fa83d7861c7d24104204a",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "ROOT0-ATTRIBUTION-v1.0",
+  "chain": {
+    "index": 1189,
+    "prev": "d7b3b26b6754eed09a240645fe593c108fddc2d788e8d20e5a2c2f5bca0aa559",
+    "link": "aeb467e81d5500e760e9375bddaec47788da91f70446212ba40765f230a14b05",
+    "head": "324d76a71627b993d22bc11c1290d4d2fd4b411ba959c6e859c3f0a71c1f72dc",
+    "chain": "ROOT0-DLW-CHAIN-v1"
+  }
+}
