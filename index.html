@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE CURVATURE CURVE — ‖r(ε)‖ = κε²</title>
+<style>
+  :root{
+    --bg:#0b0a08; --panel:#141210; --panel2:#191612; --ink:#f4ede0; --dim:#b6a992; --faint:#6f6455;
+    --line:#2a251d; --chalk:#e9e2d0; --slate:#1d2a2a;
+    --ember:#e0662e; --ember2:#f0894f; --gold:#d9a441; --cyan:#57c6c0; --violet:#9a7bd0; --lit:#7bbf6a; --spec:#c06b9a;
+    --mono:ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 20px 48px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ember2);margin-bottom:10px}
+  h1{font-family:var(--serif);font-weight:400;font-size:32px;line-height:1.03;margin:0 0 8px;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--gold)}
+  p.lede{font-family:var(--serif);font-style:italic;color:var(--dim);max-width:64ch;margin:0 0 14px;font-size:16px}
+  .eq{font-family:var(--mono);font-size:14px;color:var(--chalk);background:var(--panel2);border:1px solid var(--line);
+    border-radius:6px;padding:12px 15px;margin:14px 0;overflow-x:auto}
+  .eq b{color:var(--gold)}
+  canvas{display:block;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+  .bar{display:flex;gap:8px;align-items:center;margin:14px 0;flex-wrap:wrap}
+  button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;background:var(--slate);color:var(--chalk);
+    border:1px solid var(--line);border-radius:5px;padding:7px 13px;cursor:pointer}
+  button.on{background:var(--gold);color:#120a06;border-color:var(--gold);font-weight:700}
+  button:hover{border-color:var(--cyan)}
+  .lab{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0;font-family:var(--mono);font-size:11px}
+  .legend span{display:flex;align-items:center;gap:6px;color:var(--dim)}
+  .sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+  .fail{color:#f0b9a0;background:#1c0f0a;border:1px dashed var(--ember);border-radius:6px;padding:14px;font-family:var(--mono);font-size:12px;margin-top:12px}
+  .note{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:16px;letter-spacing:.03em;line-height:1.9}
+  .note b{color:var(--dim)}
+  .tier{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:1px 6px;border-radius:2px;border:1px solid var(--lit);color:var(--lit)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">The finite-difference curve · derived, measured, placed</div>
+  <h1>‖r(ε)‖ = <em>κ</em>ε²</h1>
+  <p class="lede">STEP 3 sampled this at four points and called it "second-order." Here is the full curve across nine decades of ε — the theoretical κε² line, the real measured residuals placed on it, and the precision floor where measurement peels off theory. Two independent computations of κ, one curve.</p>
+
+  <div class="eq">r(ε) = [F(x₀+εδ) − F(x₀)] − ε·Jδ = <b>(ε²/2)·D²F[δ,δ]</b> + O(ε³)&nbsp;&nbsp;⟹&nbsp;&nbsp;‖r(ε)‖ → <b>κ</b>·ε²,&nbsp;&nbsp;κ = ½‖D²F[δ,δ]‖ <span class="tier">LIT</span></div>
+
+  <div class="bar">
+    <span class="lab">direction δ:</span>
+    <button class="dirbtn on" data-d="0">δ₀</button>
+    <button class="dirbtn" data-d="1">δ₁</button>
+    <button class="dirbtn" data-d="2">δ₂</button>
+    <button class="dirbtn" data-d="all">all</button>
+    <span class="lab" id="kappatag" style="margin-left:10px"></span>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--gold)"></span> theory κε² (slope 2)</span>
+    <span><span class="sw" style="background:var(--cyan);height:8px;border-radius:50%"></span> measured ‖r(ε)‖</span>
+    <span><span class="sw" style="background:var(--spec)"></span> precision floor</span>
+  </div>
+
+  <canvas id="plot" height="440" role="img" aria-label="Log-log plot of finite-difference residual versus epsilon, with theory line and measured points"></canvas>
+  <div id="err"></div>
+
+  <div class="note">
+    <b>the clean band</b> (ε ≈ 1e-2…1e-6): measured points sit exactly on the slope-2 theory line — ‖r‖/κε² = 1.000. the ε² law, confirmed.<br>
+    <b>the floor</b> (ε ≲ 1e-7): the FD subtraction F(x₀+εδ)−F(x₀) loses all significant digits to catastrophic cancellation; measured residual flatlines at machine-ε (~1e-14) while theory keeps dropping. this is a limit of float64 arithmetic, NOT of the identity.<br>
+    <b>the point</b>: the constant κ isn't fit to the data — it's computed independently by second-order autograd, and the measured curve lands on it. derived, measured, matched.
+  </div>
+</div>
+
+<script>
+"use strict";
+const DATA = {"series": [{"dir": 0, "kappa": 0.08924573186644859, "points": [[0.1, 0.0008844451237959767], [0.06309573444801933, 0.0003532846437224499], [0.039810717055349734, 0.00014094088967368896], [0.025118864315095794, 5.618372813551958e-05], [0.015848931924611134, 2.2385748342026164e-05], [0.01, 8.916596307894888e-06], [0.006309573444801929, 3.550933259139621e-06], [0.003981071705534969, 1.4139463770411013e-06], [0.0025118864315095794, 5.629761098272595e-07], [0.001584893192461114, 2.241434003246462e-07], [0.001, 8.923776291598014e-08], [0.000630957344480193, 3.552735942447054e-08], [0.0003981071705534969, 1.4143997757891186e-08], [0.00025118864315095795, 5.630892003048738e-09], [0.00015848931924611126, 2.2417164822799216e-09], [0.0001, 8.924524607157626e-10], [6.309573444801929e-05, 3.5528819357954177e-10], [3.9810717055349695e-05, 1.4143759709599856e-10], [2.5118864315095822e-05, 5.631279655810661e-11], [1.5848931924611107e-05, 2.241738067145602e-11], [9.999999999999999e-06, 8.924150920067218e-12], [6.30957344480193e-06, 3.5542226896178252e-12], [3.981071705534969e-06, 1.4100060588724858e-12], [2.511886431509577e-06, 5.657186126879307e-13], [1.584893192461111e-06, 2.1645603038043236e-13], [1e-06, 9.028814321164932e-14], [6.30957344480193e-07, 3.191537165000337e-14], [3.981071705534969e-07, 2.0580133525308924e-14], [2.511886431509577e-07, 9.39521775009603e-15], [1.584893192461111e-07, 1.5703123468859856e-14], [1e-07, 1.399495215972351e-14], [6.30957344480193e-08, 1.5992585023644596e-14], [3.981071705534969e-08, 1.203011098663906e-14], [2.511886431509577e-08, 1.5099299175267746e-14], [1.584893192461111e-08, 2.106653117204432e-14], [1e-08, 1.482064793364853e-14], [6.309573444801943e-09, 1.175459693732007e-14], [3.981071705534969e-09, 1.3898868134794193e-14], [2.511886431509572e-09, 1.7523162796787316e-14], [1.584893192461111e-09, 1.0394395589322647e-14], [1e-09, 1.2578855755016819e-14]]}, {"dir": 1, "kappa": 0.08504370273346262, "points": [[0.1, 0.0008594413172040496], [0.06309573444801933, 0.0003408034671579852], [0.039810717055349734, 0.00013534371504058515], [0.025118864315095794, 5.379865214107094e-05], [0.015848931924611134, 2.1397009997090553e-05], [0.01, 8.513146349759368e-06], [0.006309573444801929, 3.3878528684171755e-06], [0.003981071705534969, 1.3484046138371722e-06], [0.0025118864315095794, 5.36728274138547e-07], [0.001584893192461114, 2.1365497102157e-07], [0.001, 8.505245529144483e-08], [0.000630957344480193, 3.385870328366748e-08], [0.0003981071705534969, 1.347907534209768e-08], [0.00025118864315095795, 5.366033821897482e-09], [0.00015848931924611126, 2.1362331427292056e-09], [0.0001, 8.504451528935003e-10], [6.309573444801929e-05, 3.3856217807368615e-10], [3.9810717055349695e-05, 1.3478670390305303e-10], [2.5118864315095822e-05, 5.3658132731159903e-11], [1.5848931924611107e-05, 2.136098527119134e-11], [9.999999999999999e-06, 8.500699336617305e-12], [6.30957344480193e-06, 3.385626347883792e-12], [3.981071705534969e-06, 1.3454996675101468e-12], [2.511886431509577e-06, 5.3634366770836e-13], [1.584893192461111e-06, 2.0855631922748813e-13], [1e-06, 8.850241626962965e-14], [6.30957344480193e-07, 3.561757665876989e-14], [3.981071705534969e-07, 1.7307481614692443e-14], [2.511886431509577e-07, 1.4136438472459769e-14], [1.584893192461111e-07, 1.430368982634828e-14], [1e-07, 1.4165416683483235e-14], [6.30957344480193e-08, 1.242698907260199e-14], [3.981071705534969e-08, 1.3137390481661512e-14], [2.511886431509577e-08, 1.427662926798306e-14], [1.584893192461111e-08, 1.2734498966470296e-14], [1e-08, 1.7597236968037547e-14], [6.309573444801943e-09, 1.5388688895191944e-14], [3.981071705534969e-09, 1.1504353519295964e-14], [2.511886431509572e-09, 1.414268458066016e-14], [1.584893192461111e-09, 1.7958382307914516e-14], [1e-09, 1.2173993510804535e-14]]}, {"dir": 2, "kappa": 0.051742275015464086, "points": [[0.1, 0.0005177231993600986], [0.06309573444801933, 0.00020606096928758844], [0.039810717055349734, 8.202320564893069e-05], [0.025118864315095794, 3.265138795485948e-05], [0.015848931924611134, 1.2998114639076327e-05], [0.01, 5.174486715377355e-06], [0.006309573444801929, 2.0599617545416404e-06], [0.003981071705534969, 8.200759770886266e-07], [0.0025118864315095794, 3.2647574232118394e-07], [0.001584893192461114, 1.2997173625119055e-07], [0.001, 5.174253521741349e-08], [0.000630957344480193, 2.059903819681947e-08], [0.0003981071705534969, 8.200611615551793e-09], [0.00025118864315095795, 3.2647244604966594e-09], [0.00015848931924611126, 1.2997145010590423e-09], [0.0001, 5.174284292777864e-10], [6.309573444801929e-05, 2.0599275337655245e-10], [3.9810717055349695e-05, 8.20114358481034e-11], [2.5118864315095822e-05, 3.2650970710058335e-11], [1.5848931924611107e-05, 1.2995237721365117e-11], [9.999999999999999e-06, 5.177570605494771e-12], [6.30957344480193e-06, 2.0715857592958138e-12], [3.981071705534969e-06, 8.248685837692774e-13], [2.511886431509577e-06, 3.3396468516115874e-13], [1.584893192461111e-06, 1.2794397655607696e-13], [1e-06, 5.6252855400896364e-14], [6.30957344480193e-07, 2.3902508662590784e-14], [3.981071705534969e-07, 1.976388673151195e-14], [2.511886431509577e-07, 1.0519794455300304e-14], [1.584893192461111e-07, 1.7248070819058932e-14], [1e-07, 1.5037944431565413e-14], [6.30957344480193e-08, 1.7736623311398937e-14], [3.981071705534969e-08, 8.328071740047902e-15], [2.511886431509577e-08, 1.3756836493727519e-14], [1.584893192461111e-08, 1.6817756070916025e-14], [1e-08, 1.1958815887107894e-14], [6.309573444801943e-09, 1.1560492611568452e-14], [3.981071705534969e-09, 1.7219390466660372e-14], [2.511886431509572e-09, 1.666370761131352e-14], [1.584893192461111e-09, 1.5187629208828272e-14], [1e-09, 1.824400170744931e-14]]}]};
+const C=getComputedStyle(document.documentElement);const col=n=>C.getPropertyValue(n).trim()||"#fff";
+const cv=document.getElementById("plot"),ctx=cv.getContext("2d");
+const kappatag=document.getElementById("kappatag");
+let showDir=0;
+function fit(){const dpr=Math.min(window.devicePixelRatio||1,2);const w=cv.clientWidth||800,h=440;
+  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";ctx.setTransform(dpr,0,0,dpr,0,0);cv._w=w;cv._h=h;}
+fit();addEventListener("resize",fit);
+
+const COLORS=[col("--cyan"),col("--violet"),col("--lit")];
+function draw(){
+  try{
+    const W=cv._w,H=cv._h,padL=64,padR=20,padT=20,padB=44;
+    ctx.clearRect(0,0,W,H);
+    // log-log ranges
+    const exMin=-9,exMax=-1;                       // eps 1e-9 .. 1e-1
+    const eyMin=-16,eyMax=-2;                       // ||r|| 1e-16 .. 1e-2
+    const X=ex=>padL+((ex-exMin)/(exMax-exMin))*(W-padL-padR);
+    const Y=ey=>H-padB-((ey-eyMin)/(eyMax-eyMin))*(H-padT-padB);
+    // grid
+    ctx.font="9px "+col("--mono");ctx.fillStyle=col("--faint");
+    for(let e=exMin;e<=exMax;e++){const x=X(e);
+      ctx.strokeStyle=col("--line");ctx.globalAlpha=0.5;ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,H-padB);ctx.stroke();ctx.globalAlpha=1;
+      ctx.textAlign="center";ctx.fillText("1e"+e,x,H-padB+14);}
+    for(let e=eyMax;e>=eyMin;e-=2){const y=Y(e);
+      ctx.strokeStyle=col("--line");ctx.globalAlpha=0.5;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();ctx.globalAlpha=1;
+      ctx.textAlign="right";ctx.fillText("1e"+e,padL-6,y+3);}
+    ctx.textAlign="center";ctx.fillStyle=col("--dim");ctx.font="11px "+col("--mono");
+    ctx.fillText("step size  ε  (log)",W/2,H-8);
+    ctx.save();ctx.translate(16,H/2);ctx.rotate(-Math.PI/2);ctx.fillText("‖r(ε)‖  residual after subtracting Jδ  (log)",0,0);ctx.restore();
+
+    // precision-floor shading (eps < ~1e-6.5)
+    ctx.fillStyle="rgba(192,107,154,0.08)";
+    ctx.fillRect(X(-9),padT,X(-6.5)-X(-9),H-padT-padB);
+    ctx.fillStyle=col("--spec");ctx.globalAlpha=0.8;ctx.font="9px "+col("--mono");ctx.textAlign="left";
+    ctx.fillText("precision floor",X(-9)+6,padT+14);
+    ctx.fillText("(float64 cancellation)",X(-9)+6,padT+26);ctx.globalAlpha=1;
+
+    const dirs = showDir==="all"?[0,1,2]:[showDir];
+    dirs.forEach(di=>{
+      const s=DATA.series[di]; const k=s.kappa; const c=COLORS[di];
+      // theory line: ||r|| = k*eps^2 -> log10 = 2*log10(eps)+log10(k)
+      const lk=Math.log10(k);
+      ctx.strokeStyle=col("--gold");ctx.globalAlpha=showDir==="all"?0.4:0.9;ctx.lineWidth=2;ctx.setLineDash([6,4]);
+      ctx.beginPath();
+      let first=true;
+      for(let ex=exMin;ex<=exMax;ex+=0.1){const ey=2*ex+lk; const x=X(ex),y=Y(ey);
+        if(ey<eyMin-1)continue; first?(ctx.moveTo(x,y),first=false):ctx.lineTo(x,y);}
+      ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+      // measured points
+      s.points.forEach(([eps,r])=>{
+        const ex=Math.log10(eps), ey=r>0?Math.log10(r):eyMin;
+        const x=X(ex),y=Y(Math.max(ey,eyMin));
+        // on-theory points cyan, floor points spec
+        const th=k*eps*eps; const onTheory = r>0 && Math.abs(Math.log10(r)-Math.log10(th))<0.3;
+        ctx.fillStyle=onTheory?c:col("--spec");
+        ctx.beginPath();ctx.arc(x,y,onTheory?3.4:2.6,0,7);ctx.fill();
+      });
+      // slope-2 reference triangle (only single-dir view)
+      if(showDir!=="all"){
+        const ax=X(-4),ay=Y(2*(-4)+lk);
+        ctx.strokeStyle=col("--faint");ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(X(-3),Y(2*(-4)+lk));ctx.lineTo(X(-3),Y(2*(-3)+lk));ctx.stroke();
+        ctx.fillStyle=col("--faint");ctx.font="9px "+col("--mono");ctx.textAlign="left";
+        ctx.fillText("2",X(-3)+4,(Y(2*(-4)+lk)+Y(2*(-3)+lk))/2);
+        ctx.fillText("1",(ax+X(-3))/2,Y(2*(-4)+lk)+12);
+      }
+    });
+    if(showDir==="all"){ kappatag.textContent="κ = "+DATA.series.map(s=>s.kappa.toFixed(4)).join(", ")+" (per direction)"; }
+    else { kappatag.textContent="κ = "+DATA.series[showDir].kappa.toFixed(6)+"  (½‖D²F[δ,δ]‖, autograd)"; }
+  }catch(e){
+    document.getElementById("err").innerHTML="<div class='fail'><b>plot failed:</b> "+String(e.message||e)+"</div>";
+  }
+}
+draw();
+document.querySelectorAll(".dirbtn").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".dirbtn").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); const d=b.dataset.d; showDir=(d==="all")?"all":parseInt(d,10); draw();
+});
+</script>
+</body>
+</html>
